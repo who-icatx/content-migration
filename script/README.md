@@ -1,10 +1,14 @@
-This script exports the WHO-FIC Foundation project from the iCAT database dump into an OWL 2.0 file.
+This script migrates the WHO-FIC Foundation project from the current iCAT SQL database dump into an OWL 2.0 file, which will be used to edit the Foundation in iCAT-X. 
+
+NOTE: Even though, this script builds on the iCAT OWL 2.0 export script, they are different, and have different purposes. This script will generate the complete Foundation content that will be used in iCAT-X, and is not intended for other purposes. For a simplified OWL 2.0 export of the iCAT Content, use the OWL Export script at:
+https://github.com/protegeproject/icd-owl-export
+
+----- To use this script -----
 
 Edit export.properties to match your configuration (e.g., project paths, output path, max heap size, etc.). Each property has a short description for the expected value.
 
-The script will copy icd-base.owl from template folder to initialize the target ontology, which will be saved in {output.owl.file} as configured in export.properties.
+The script will create the output file {output.owl.file} as configured in export.properties. This generated OWL file will import the content model file {cm.owl}, which in turn imports the postcoordination properties OWL file {cm-postcoordination.owl} from {script/contentmodel} folder.
 
-The icd-base.owl file contains the basic metadata about the WHO-FIC Foundation ontology. Edit the ontology metadata in this file, either in a text editor, or in an ontology editor, like Protege (http://protege.stanford.edu). The script will append the OWL content to this file.
 
 Run the script via the command:
 

@@ -3,6 +3,7 @@ package org.who.owl.export;
 import java.util.Optional;
 
 import org.apache.log4j.Logger;
+import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLAnnotation;
 import org.semanticweb.owlapi.model.OWLAnnotationProperty;
 import org.semanticweb.owlapi.model.OWLAnnotationValue;
@@ -39,8 +40,8 @@ public class ExportPostProcessor {
 	}
 
 	public void postprocess() {
-		log.info("Post-process: Adding missing title for logical definition fillers");
-		addMissingTitlesForLogDefFillers();
+		//log.info("Post-process: Adding missing title for logical definition fillers");
+		//addMissingTitlesForLogDefFillers();
 		
 		log.info("Post-process: Move erroneous classes under Error class");
 		moveErrorClasses();
@@ -147,12 +148,18 @@ public class ExportPostProcessor {
 	}
 
 	private boolean hasNoTitle(OWLEntity ind) {
-		return getAnnotationValue(targetOnt, ind, icdapiModel.getTitleProp()) == null;
+		return getAnnotationInstanceValue(targetOnt, ind, icdapiModel.getTitleProp()) == null;
 	}
 
 	private OWLLiteral getAnnotationValue(OWLOntology ont, OWLEntity cls, OWLAnnotationProperty prop) {
 		Optional<OWLAnnotationValue> ann = Searcher
 				.values(Searcher.annotationObjects(ont.annotationAssertionAxioms(cls.getIRI()), prop)).findFirst();
 		return ann.isPresent() ? ann.get().asLiteral().get() : null;
+	}
+	
+	private IRI getAnnotationInstanceValue(OWLOntology ont, OWLEntity cls, OWLAnnotationProperty prop) {
+		Optional<OWLAnnotationValue> ann = Searcher
+				.values(Searcher.annotationObjects(ont.annotationAssertionAxioms(cls.getIRI()), prop)).findFirst();
+		return ann.isPresent() ? ann.get().asIRI().get() : null;
 	}
 }

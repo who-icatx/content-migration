@@ -11,18 +11,20 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
 import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.model.AddImport;
 import org.semanticweb.owlapi.model.AddOntologyAnnotation;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLAnnotation;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLDataFactory;
+import org.semanticweb.owlapi.model.OWLImportsDeclaration;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
+import org.semanticweb.owlapi.util.SimpleIRIMapper;
 
 import edu.stanford.bmir.whofic.icd.ICDContentModel;
 import edu.stanford.smi.protege.exception.OntologyLoadException;
@@ -32,11 +34,11 @@ import edu.stanford.smi.protegex.owl.ProtegeOWL;
 import edu.stanford.smi.protegex.owl.model.OWLModel;
 import edu.stanford.smi.protegex.owl.model.RDFSNamedClass;
 
-public class ICD2OWLExporter {
+public class ICD2OWLMigrator {
 
-	private final static Logger log = Logger.getLogger(ICD2OWLExporter.class);
+	private final static Logger log = Logger.getLogger(ICD2OWLMigrator.class);
 	
-	private static String TEMPLATE_FILE_PATH = "template/icd-base.owl";
+	private static String CM_FILE_PATH = "contentmodel/cm.owl";
 
 	private OWLModel sourceOnt;
 
@@ -55,7 +57,7 @@ public class ICD2OWLExporter {
 	private int exportedClassesCount = 0;
 	private boolean isICTM = false;
 
-	public ICD2OWLExporter(OWLModel sourceOnt, OWLOntologyManager manager, ICDAPIModel icdapiModel,
+	public ICD2OWLMigrator(OWLModel sourceOnt, OWLOntologyManager manager, ICDAPIModel icdapiModel,
 			OWLOntology targetOnt, RDFSNamedClass sourceTopClass) {
 		this.sourceOnt = sourceOnt;
 		this.manager = manager;
@@ -74,7 +76,7 @@ public class ICD2OWLExporter {
 			return;
 		}
 		
-		PropertyConfigurator.configure("log4j.properties");
+		//PropertyConfigurator.configure("log4j.properties");
 
 		String sourceICDPrjFile = args[0];
 
@@ -132,7 +134,7 @@ public class ICD2OWLExporter {
 		log.info("Top class: " + sourceTopClass.getBrowserText());
 		log.info("Output file: " + outputOWLFile);
 
-		ICD2OWLExporter icdConv = new ICD2OWLExporter(sourceOnt, manager, icdapiModel, targetOnt, sourceTopClass);
+		ICD2OWLMigrator icdConv = new ICD2OWLMigrator(sourceOnt, manager, icdapiModel, targetOnt, sourceTopClass);
 
 		try {
 			icdConv.export();
@@ -161,7 +163,7 @@ public class ICD2OWLExporter {
 		traversed.add(sourceCls);
 
 		try {
-			ClassExporter clsExporter = new ClassExporter(sourceCls, sourceOnt, manager, targetOnt, cm, icdapiModel,
+			ClassExporter clsExporter = new ClassExporter(sourceCls, manager, targetOnt, cm, icdapiModel,
 					isICTM);
 			OWLClass targetCls = clsExporter.export();
 
@@ -247,22 +249,29 @@ public class ICD2OWLExporter {
 		return owlModel;
 	}
 
-	private static OWLOntology initTargetOnt(OWLOntologyManager manager, String outputOWLFile) {
-		File outputOntFile = new File(outputOWLFile);
+	private static OWLOntology initTargetOnt(OWLOntologyManager manager, String outputOntFilePath) {
+		File outputOntFile = new File(outputOntFilePath);
 		OWLOntology targetOnt = null;
 
 		if (outputOntFile.exists() == true) { // target ont file already exists
-			log.info("Loading existing target ontology from " + outputOntFile.getAbsolutePath());
-			targetOnt = loadFromExistingFile(manager, outputOntFile);
-		} else { // target ont file does not exist, try to use template file
-			File templateOntFile = new File(TEMPLATE_FILE_PATH);
+			log.info("Loading existing target ontology from " + outputOntFile.getAbsolutePath() +
+					". The migrated content will be addded to this file.");
 			
-			if (templateOntFile.exists() == true) { // start with template ont file
-				log.info("Initializing target ontology with template from: " + templateOntFile.getAbsolutePath());
-				targetOnt = loadFromExistingFile(manager, templateOntFile);
-			} else { // template file does not exist, initialize empty target ont
+			try {
+				targetOnt = manager.loadOntologyFromOntologyDocument(outputOntFile);
+			} catch (OWLOntologyCreationException e) {
+				log.error("Could not load target ontology from: " + outputOntFile.getAbsolutePath(), e);
+			}
+		} else { // target ont file does not exist, import the content model file
+			File cmOntFile = new File(CM_FILE_PATH);
+			
+			if (cmOntFile.exists() == true) { // start with template ont file
+				log.info("Creating new ontology at: " + outputOntFile.getAbsolutePath());
+				
+				targetOnt = loadFromExistingFile(manager, outputOntFile);
+			} else { // content model file does not exist, initialize empty target ont
 				try {
-					log.info("Creating new target ontology");
+					log.info("Creating new target ontology (no content model ontology was found)");
 					targetOnt = manager.createOntology(IRI.create(ICDAPIConstants.TARGET_ONT_NAME));
 				} catch (OWLOntologyCreationException e) {
 					log.error("Could not create target OWL ontology", e);
@@ -274,13 +283,33 @@ public class ICD2OWLExporter {
 		return targetOnt;
 	}
 	
+	
 	private static OWLOntology loadFromExistingFile(OWLOntologyManager manager, File outputOntFile) {
 		OWLOntology targetOnt = null;
 		
 		try {
-			targetOnt = manager.loadOntologyFromOntologyDocument(outputOntFile);
+		     targetOnt = manager.createOntology(IRI.create(ICDAPIConstants.TARGET_ONT_NAME));
+		     
+		     IRI localCMIRI = IRI.create(CM_FILE_PATH);
+		     IRI remoteCMIRI = IRI.create(ICDAPIConstants.CM_ONT_NAME);
+		     
+		     log.info("Importing content model from: " + localCMIRI);
+		     
+		     manager.getIRIMappers().add(new SimpleIRIMapper(remoteCMIRI, localCMIRI));
+			
+		     OWLImportsDeclaration importDeclaration=manager.getOWLDataFactory().getOWLImportsDeclaration(remoteCMIRI);
+		     manager.applyChange(new AddImport(targetOnt, importDeclaration));
+		     
+		     log.info("Saving target ontology to: " + outputOntFile.getAbsolutePath());
+		     IRI outputOntIRI = IRI.create(outputOntFile);
+		    
+		     manager.saveOntology(targetOnt, outputOntIRI);
+		//     targetOnt = manager.loadOntology(outputOntIRI);
+		     
 		} catch (OWLOntologyCreationException e) {
-			log.error("Could not load target OWL ontology from " + outputOntFile.getAbsolutePath(), e);
+			log.error("Could not load target OWL ontology from: " + outputOntFile.getAbsolutePath(), e);
+		} catch (OWLOntologyStorageException e) {
+			log.error("Could not save target OWL ontology to: " + outputOntFile.getAbsolutePath(), e);
 		}
 		
 		return targetOnt;

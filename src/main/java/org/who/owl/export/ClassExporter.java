@@ -1,6 +1,5 @@
 package org.who.owl.export;
 
-import java.util.ArrayList;
 import java.util.Collection;
 
 import org.semanticweb.owlapi.model.IRI;
@@ -9,20 +8,18 @@ import org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLAnnotationProperty;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLDataFactory;
+import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary;
 
 import edu.stanford.bmir.whofic.icd.ICDContentModel;
-import edu.stanford.smi.protegex.owl.model.OWLModel;
 import edu.stanford.smi.protegex.owl.model.RDFProperty;
 import edu.stanford.smi.protegex.owl.model.RDFResource;
 import edu.stanford.smi.protegex.owl.model.RDFSNamedClass;
 
 public class ClassExporter {
 
-	private OWLModel sourceOnt;
-	
 	private OWLOntologyManager manager;
 	private OWLDataFactory df;
     private OWLOntology targetOnt;
@@ -36,10 +33,9 @@ public class ClassExporter {
     private boolean isICTM = false;
     
 
-	public ClassExporter(RDFSNamedClass cls, OWLModel sourceOnt, OWLOntologyManager manager, 
+	public ClassExporter(RDFSNamedClass cls, OWLOntologyManager manager, 
 			OWLOntology targetOnt, ICDContentModel cm, ICDAPIModel icdapiModel, boolean isICTM) {
 		this.sourceCls = cls;
-		this.sourceOnt = sourceOnt;
 		this.manager = manager;
 		this.df = manager.getOWLDataFactory();
 		this.targetOnt = targetOnt;
@@ -64,8 +60,8 @@ public class ClassExporter {
 		
 		addSyns(cls);
 		addNarrower(cls);
-		
 		addInclusions(cls);
+		
 		addExclusions(cls);
 		
 		addIsObosolte(cls);
@@ -76,61 +72,67 @@ public class ClassExporter {
 	}
 
 
-
-
-	@SuppressWarnings("deprecation")
 	private void addExclusions(OWLClass cls) {
-		if (isICTM == true) {
-			addStringAnnotations(cls, icdapiModel.getExclusionProp(), cm.getExclusionProperty());
-		} else {
-			//In the initial implementation, exclusions were exported as annotation on annotation.
-			//For ease of use, exclusions are now exported as an annotation with value the IRI of the referenced exclusion class.
-			//addReferenceAnnotations(cls, icdapiModel.getExclusionProp(), cm.getBaseExclusionProperty());
 		
-			addReferenceAsIRIAnnotations(cls, icdapiModel.getExclusionProp(), cm.getBaseExclusionProperty());
+		Collection<RDFResource> terms = cm.getTerms(sourceCls, cm.getBaseExclusionProperty());
+		for (RDFResource term : terms) {
+			OWLNamedIndividual targetTerm = createBaseExclusionTerm(term);
+			
+			// add reference category
+			RDFSNamedClass refCls = (RDFSNamedClass) term.getPropertyValue(cm.getReferencedCategoryProperty());
+			
+			if (refCls != null) {
+				IRI refIri = IRI.create(PublicIdCache.getPublicId(cm, refCls));
+					if (refIri != null) {
+						OWLAnnotation ann = df.getOWLAnnotation(icdapiModel.getReferencedEntityProp(), refIri);
+						OWLAnnotationAssertionAxiom annAssertAx = df.getOWLAnnotationAssertionAxiom(targetTerm.getIRI(), ann);
+						manager.addAxiom(targetOnt, annAssertAx);
+					}
+			}
+			
+			//add alternative label
+			String label = (String) term.getPropertyValue(cm.getLabelProperty());
+			if (label != null) {
+				OWLAnnotation ann = df.getOWLAnnotation(icdapiModel.getLabelProp(), df.getOWLLiteral(label, ICDAPIConstants.EN_LANG));
+				manager.addAxiom(targetOnt, df.getOWLAnnotationAssertionAxiom(targetTerm.getIRI(), ann));
+			}
+			
+			OWLAnnotation ann = df.getOWLAnnotation(icdapiModel.getBaseExcusionProp(), targetTerm.getIRI());
+			manager.addAxiom(targetOnt,	 df.getOWLAnnotationAssertionAxiom(cls.getIRI(), ann));
 		}
 	}
 
-	/**
-	 * Putting together here the indexBaseInclusions and the subclassBaseInclusions, for 
-	 * consistency purpose. The value of the annotation will be the text,
-	 * either the actual text for the indexBaseInclusions, or the title for the
-	 * subclassBaseInclusions. For the latter, we will also add an annotation on the
-	 * annotation with the foundationReference as a link to the actual subclass, as
-	 * is in the API.
-	 * 
-	 * The two types of inclusions can be easily split.
-	 * 
-	 * @param cls
-	 */
+	private OWLNamedIndividual createBaseExclusionTerm(RDFResource term) {
+		OWLNamedIndividual targetTerm = df.getOWLNamedIndividual(term.getName());
+		manager.addAxiom(targetOnt, df.getOWLClassAssertionAxiom(icdapiModel.getBaseExclusionCls(), targetTerm));
+		return targetTerm;
+	}
+	
 	private void addInclusions(OWLClass cls) {
-		if (isICTM == true) {
-			addSimpleInclusions(cls);
-		} else {
-			addIndexBaseInclusions(cls);
-			addSubclassBaseInclusions(cls);
-		}
-	}
-
-	@SuppressWarnings("deprecation")
-	private void addSimpleInclusions(OWLClass cls) {
-		addStringAnnotations(cls, icdapiModel.getInclusionProp(), cm.getInclusionProperty());
+		addIndexBaseInclusions(cls);
+		addSubclassBaseInclusions(cls);
 	}
 
 	private void addSubclassBaseInclusions(OWLClass cls) {
-		addReferenceAnnotations(cls, icdapiModel.getInclusionProp(), cm.getSubclassBaseInclusionProperty());
-	}
-
-	private void addIndexBaseInclusions(OWLClass cls) {
-		addStringAnnotations(cls, icdapiModel.getInclusionProp(), cm.getIndexBaseInclusionProperty());
+		
+		RDFProperty refCatProp = cm.getReferencedCategoryProperty();
+		if (refCatProp == null) { //happens in ICTM
+			return;
+		}
+		addReferenceAsIRIAnnotations(cls, icdapiModel.getSubclsBaseInclusionProp(), cm.getSubclassBaseInclusionProperty());
 	}
 
 	private void addNarrower(OWLClass cls) {
-		addStringAnnotations(cls, icdapiModel.getNarrowerProp(), cm.getNarrowerProperty());
+		addLanguageTermAnnotations(cls, icdapiModel.getBaseIndexProp(), cm.getNarrowerProperty(), icdapiModel.getNarrowerIndexTypeInst());
 	}
 
 	private void addSyns(OWLClass cls) {
-		addStringAnnotations(cls, icdapiModel.getSynProp(), cm.getSynonymProperty());
+		addLanguageTermAnnotations(cls, icdapiModel.getBaseIndexProp(), cm.getSynonymProperty(), icdapiModel.getSynonymIndexTypeInst());
+	}
+
+	// index terms that are neither syns nor narrower terms, just inclusions
+	private void addIndexBaseInclusions(OWLClass cls) {
+		addLanguageTermAnnotations(cls, icdapiModel.getBaseIndexProp(), cm.getSynonymProperty(), null);
 	}
 
 	private void addPublicBrowserLink(OWLClass cls) {
@@ -139,27 +141,27 @@ public class ClassExporter {
 	}
 
 	private void addNote(OWLClass cls) {
-		addStringAnnotation(cls, icdapiModel.getNoteProp(), cm.getNoteProperty());
+		addLanguageTermAnnotations(cls, icdapiModel.getNoteProp(), cm.getNoteProperty());
 	}
 
 	private void addCodingHint(OWLClass cls) {
-		addStringAnnotation(cls, icdapiModel.getCodingHintProp(), cm.getCodingHintProperty());
+		addLanguageTermAnnotations(cls, icdapiModel.getCodingHintProp(), cm.getCodingHintProperty());
 	}
 
 	private void addFullySpecifiedTitle(OWLClass cls) {
-		addStringAnnotation(cls, icdapiModel.getFullNameProp(), cm.getFullySpecifiedNameProperty());
+		addLanguageTermAnnotations(cls, icdapiModel.getFullNameProp(), cm.getFullySpecifiedNameProperty());
 	}
 
 	private void addTitle(OWLClass cls) {
-		addStringAnnotations(cls, icdapiModel.getTitleProp(), cm.getIcdTitleProperty());
+		addLanguageTermAnnotations(cls, icdapiModel.getTitleProp(), cm.getIcdTitleProperty());
 	}
 	
 	private void addDefinition(OWLClass cls) {
-		addStringAnnotations(cls, icdapiModel.getDefProp(), cm.getDefinitionProperty());
+		addLanguageTermAnnotations(cls, icdapiModel.getDefProp(), cm.getDefinitionProperty());
 	}
 
 	private void addLongDefinition(OWLClass cls) {
-		addStringAnnotation(cls, icdapiModel.getLongDefProp(), cm.getLongDefinitionProperty());
+		addLanguageTermAnnotations(cls, icdapiModel.getLongDefProp(), cm.getLongDefinitionProperty());
 	}
 	
 	
@@ -189,83 +191,6 @@ public class ClassExporter {
 		return cls;
 	}
  
-	private void addStringAnnotations(OWLClass cls, OWLAnnotationProperty targetProp, RDFProperty sourceProp) {
-		Collection<RDFResource> terms = cm.getTerms(sourceCls, sourceProp);
-		for (RDFResource term : terms) {
-			addStringAnnotationFromTerm(cls, targetProp, sourceProp, term);
-		}
-	}
-	
-	private void addStringAnnotation(OWLClass cls, OWLAnnotationProperty targetProp, RDFProperty sourceProp) {
-		RDFResource termInst = cm.getTerm(sourceCls, sourceProp);
-		if (termInst == null) {
-			return;
-		}
-		
-		if (isAppropriateTerm (termInst) == true) {
-			addStringAnnotationFromTerm(cls, targetProp, sourceProp, termInst);
-		}
-	}
-	
-
-	private void addStringAnnotationFromTerm(OWLClass cls, OWLAnnotationProperty targetProp, RDFProperty sourceProp, RDFResource termInst) {
-		String label = (String) termInst.getPropertyValue(cm.getLabelProperty());
-		if (label == null) {
-			return;
-		}
-		String lang = (String) termInst.getPropertyValue(cm.getLangProperty());
-		
-		if (isAppropriateTerm (termInst) == true) {
-			addStringAnnotation(cls, targetProp, label, lang);
-		}
-	}
-		
-	//default language is en
-	private OWLAnnotationAssertionAxiom addStringAnnotation(OWLClass cls, OWLAnnotationProperty targetProp, String value, String lang) {
-		if (value == null) {
-			return null;
-		}
-		lang = lang == null ? "en" : lang;
-		OWLAnnotation ann = df.getOWLAnnotation(targetProp, df.getOWLLiteral(value,lang));
-		OWLAnnotationAssertionAxiom annotationAssertionAxiom = df.getOWLAnnotationAssertionAxiom(cls.getIRI(), ann);
-		manager.addAxiom(targetOnt, annotationAssertionAxiom);
-		
-		return annotationAssertionAxiom;
-	}
-	
-	private void addReferenceAnnotations(OWLClass cls, OWLAnnotationProperty targetProp, RDFProperty sourceProp) {
-		Collection<RDFResource> terms = cm.getTerms(sourceCls, sourceProp);
-		for (RDFResource term : terms) {
-			addReferenceAnnotationFromTerm(cls, targetProp, sourceProp, term);
-		}
-	}
-
-	private void addReferenceAnnotationFromTerm(OWLClass cls, OWLAnnotationProperty targetProp, RDFProperty sourceProp,
-			RDFResource term) {
-		RDFProperty refCatProp = cm.getReferencedCategoryProperty();
-		if (refCatProp == null) { //happens in ICTM
-			return;
-		}
-		RDFSNamedClass refCls = (RDFSNamedClass) term.getPropertyValue(cm.getReferencedCategoryProperty());
-		if (refCls == null) {
-			return;
-		}
-		RDFResource refTitleTerm = cm.getTerm(refCls, cm.getIcdTitleProperty());
-		String label = (String) refTitleTerm.getPropertyValue(cm.getLabelProperty());
-		if (label == null) {
-			return;
-		}
-		String lang = (String) refTitleTerm.getPropertyValue(cm.getLangProperty());
-		OWLAnnotation mainAnn = df.getOWLAnnotation(targetProp, df.getOWLLiteral(label,lang));
-		
-		IRI refIri = IRI.create(PublicIdCache.getPublicId(cm, refCls));
-		OWLAnnotation refAnn = df.getOWLAnnotation(icdapiModel.getFoundRefProp(), refIri);
-		Collection<OWLAnnotation> refAnnCol = new ArrayList<OWLAnnotation>();
-		refAnnCol.add(refAnn);
-		
-		OWLAnnotationAssertionAxiom annotationAssertionAxiom = df.getOWLAnnotationAssertionAxiom(cls.getIRI(), mainAnn, refAnnCol);
-		manager.addAxiom(targetOnt, annotationAssertionAxiom);
-	}
 	
 	private void addReferenceAsIRIAnnotations(OWLClass cls, OWLAnnotationProperty targetProp, RDFProperty sourceProp) {
 		Collection<RDFResource> terms = cm.getTerms(sourceCls, sourceProp);
@@ -300,6 +225,60 @@ public class ClassExporter {
 		
 		return annotationAssertionAxiom;
 	}
+	
+	private void addLanguageTermAnnotations(OWLClass cls, OWLAnnotationProperty targetProp, RDFProperty sourceProp) {
+		addLanguageTermAnnotations(cls, targetProp, sourceProp, null);
+	}
+	
+	private void addLanguageTermAnnotations(OWLClass cls, OWLAnnotationProperty targetProp, 
+			RDFProperty sourceProp, OWLNamedIndividual indexType) {
+		Collection<RDFResource> terms = cm.getTerms(sourceCls, sourceProp);
+		for (RDFResource term : terms) {
+			addLanguageTermAnnotationFromTerm(cls, targetProp, sourceProp, term, indexType);
+		}
+	}
+	
+	private void addLanguageTermAnnotationFromTerm(OWLClass cls, OWLAnnotationProperty targetProp, 
+			RDFProperty sourceProp, RDFResource termInst, OWLNamedIndividual indexType) {
+		String label = (String) termInst.getPropertyValue(cm.getLabelProperty());
+		if (label == null || isAppropriateTerm (termInst) != true) {
+			return;
+		}
+		
+		//TODO: some term instance names in old icat are malformed. Check for them, and fix them
+		OWLNamedIndividual targetTermInst = df.getOWLNamedIndividual(termInst.getName()); //keep the same IRI of the term. Important
+		manager.addAxiom(targetOnt, df.getOWLClassAssertionAxiom(icdapiModel.getLanguageTermCls(), targetTermInst));
+		
+		OWLAnnotation labelAnn = df.getOWLAnnotation(icdapiModel.getLabelProp(), df.getOWLLiteral(label, ICDAPIConstants.EN_LANG));
+		OWLAnnotationAssertionAxiom labelAnnAssertAx = df.getOWLAnnotationAssertionAxiom(targetTermInst.getIRI(), labelAnn);
+		manager.addAxiom(targetOnt, labelAnnAssertAx);
+		
+		OWLAnnotation clsAnn = df.getOWLAnnotation(targetProp, targetTermInst.getIRI());
+		OWLAnnotationAssertionAxiom clsAnnAssertAx = df.getOWLAnnotationAssertionAxiom(cls.getIRI(), clsAnn);
+		manager.addAxiom(targetOnt, clsAnnAssertAx);
+		
+		// this is a base index, i.e., narrower or syn
+		if (indexType != null) { 
+			OWLAnnotation indexTypeAnn = df.getOWLAnnotation(icdapiModel.getIndexTypeProp(), indexType.getIRI());
+			OWLAnnotationAssertionAxiom indexTypeAnnAssertAx = df.getOWLAnnotationAssertionAxiom(targetTermInst.getIRI(), indexTypeAnn);
+			manager.addAxiom(targetOnt, indexTypeAnnAssertAx);
+		}
+		
+		//check if it is also a base inclusion
+		if (isBaseInclusion(termInst) == true) {
+				OWLAnnotation ann = df.getOWLAnnotation(icdapiModel.isInclusionProp(), df.getOWLLiteral(true));
+				OWLAnnotationAssertionAxiom annAssertAx = df.getOWLAnnotationAssertionAxiom(targetTermInst.getIRI(), ann);
+				manager.addAxiom(targetOnt, annAssertAx);
+		}
+		
+	}
+		
+	
+	@SuppressWarnings("deprecation")
+	private boolean isBaseInclusion(RDFResource termInst) {
+		return termInst.hasDirectType(cm.getTermBaseInclusionClass());
+	}
+
 	
 	private void deprecateCls(OWLClass cls) {
 		addBooleanAnnotation(cls, df.getOWLAnnotationProperty(OWLRDFVocabulary.OWL_DEPRECATED.getIRI()), true);
