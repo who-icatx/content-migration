@@ -18,3 +18,4 @@ The output will be in the {output.owl.file} as configured in export.properties.
 
 
 The script may take 30 mins to run, so it is recommended to be run in a screen session, if run on a Linux server. See more: https://linux.die.net/man/1/screen
+
