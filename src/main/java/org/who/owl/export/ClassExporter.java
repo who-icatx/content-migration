@@ -8,7 +8,9 @@ import org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLAnnotationProperty;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLDataFactory;
+import org.semanticweb.owlapi.model.OWLDataPropertyAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLNamedIndividual;
+import org.semanticweb.owlapi.model.OWLObjectPropertyAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary;
@@ -84,17 +86,16 @@ public class ClassExporter {
 			if (refCls != null) {
 				IRI refIri = IRI.create(PublicIdCache.getPublicId(cm, refCls));
 					if (refIri != null) {
-						OWLAnnotation ann = df.getOWLAnnotation(icdapiModel.getReferencedEntityProp(), refIri);
-						OWLAnnotationAssertionAxiom annAssertAx = df.getOWLAnnotationAssertionAxiom(targetTerm.getIRI(), ann);
-						manager.addAxiom(targetOnt, annAssertAx);
+						OWLDataPropertyAssertionAxiom ax = df.getOWLDataPropertyAssertionAxiom(icdapiModel.getReferencedEntityProp(), targetTerm, df.getOWLLiteral(refIri.getIRIString()));
+						manager.addAxiom(targetOnt, ax);
 					}
 			}
 			
 			//add alternative label
 			String label = (String) term.getPropertyValue(cm.getLabelProperty());
 			if (label != null) {
-				OWLAnnotation ann = df.getOWLAnnotation(icdapiModel.getLabelProp(), df.getOWLLiteral(label, ICDAPIConstants.EN_LANG));
-				manager.addAxiom(targetOnt, df.getOWLAnnotationAssertionAxiom(targetTerm.getIRI(), ann));
+				OWLDataPropertyAssertionAxiom ax = df.getOWLDataPropertyAssertionAxiom(icdapiModel.getLabelProp(), targetTerm, df.getOWLLiteral(label, ICDAPIConstants.EN_LANG));
+				manager.addAxiom(targetOnt, ax);
 			}
 			
 			OWLAnnotation ann = df.getOWLAnnotation(icdapiModel.getBaseExcusionProp(), targetTerm.getIRI());
@@ -249,9 +250,8 @@ public class ClassExporter {
 		OWLNamedIndividual targetTermInst = df.getOWLNamedIndividual(termInst.getName()); //keep the same IRI of the term. Important
 		manager.addAxiom(targetOnt, df.getOWLClassAssertionAxiom(icdapiModel.getLanguageTermCls(), targetTermInst));
 		
-		OWLAnnotation labelAnn = df.getOWLAnnotation(icdapiModel.getLabelProp(), df.getOWLLiteral(label, ICDAPIConstants.EN_LANG));
-		OWLAnnotationAssertionAxiom labelAnnAssertAx = df.getOWLAnnotationAssertionAxiom(targetTermInst.getIRI(), labelAnn);
-		manager.addAxiom(targetOnt, labelAnnAssertAx);
+		OWLDataPropertyAssertionAxiom ax = df.getOWLDataPropertyAssertionAxiom(icdapiModel.getLabelProp(), targetTermInst, df.getOWLLiteral(label, ICDAPIConstants.EN_LANG) );
+		manager.addAxiom(targetOnt, ax);
 		
 		OWLAnnotation clsAnn = df.getOWLAnnotation(targetProp, targetTermInst.getIRI());
 		OWLAnnotationAssertionAxiom clsAnnAssertAx = df.getOWLAnnotationAssertionAxiom(cls.getIRI(), clsAnn);
@@ -259,16 +259,14 @@ public class ClassExporter {
 		
 		// this is a base index, i.e., narrower or syn
 		if (indexType != null) { 
-			OWLAnnotation indexTypeAnn = df.getOWLAnnotation(icdapiModel.getIndexTypeProp(), indexType.getIRI());
-			OWLAnnotationAssertionAxiom indexTypeAnnAssertAx = df.getOWLAnnotationAssertionAxiom(targetTermInst.getIRI(), indexTypeAnn);
-			manager.addAxiom(targetOnt, indexTypeAnnAssertAx);
+			OWLObjectPropertyAssertionAxiom ax1 = df.getOWLObjectPropertyAssertionAxiom(icdapiModel.getIndexTypeProp(), targetTermInst, indexType);
+			manager.addAxiom(targetOnt, ax1);
 		}
 		
 		//check if it is also a base inclusion
 		if (isBaseInclusion(termInst) == true) {
-				OWLAnnotation ann = df.getOWLAnnotation(icdapiModel.isInclusionProp(), df.getOWLLiteral(true));
-				OWLAnnotationAssertionAxiom annAssertAx = df.getOWLAnnotationAssertionAxiom(targetTermInst.getIRI(), ann);
-				manager.addAxiom(targetOnt, annAssertAx);
+			OWLDataPropertyAssertionAxiom ax1 = df.getOWLDataPropertyAssertionAxiom(icdapiModel.isInclusionProp(), targetTermInst, df.getOWLLiteral(true));
+			manager.addAxiom(targetOnt, ax1);
 		}
 		
 	}

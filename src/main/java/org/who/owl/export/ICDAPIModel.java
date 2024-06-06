@@ -4,6 +4,7 @@ package org.who.owl.export;
 import org.semanticweb.owlapi.model.OWLAnnotationProperty;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLDataFactory;
+import org.semanticweb.owlapi.model.OWLDataProperty;
 import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLObjectProperty;
 import org.semanticweb.owlapi.model.OWLOntology;
@@ -22,7 +23,7 @@ public class ICDAPIModel {
 	private OWLAnnotationProperty defProp;
 	private OWLAnnotationProperty longDefProp;
 	
-	private OWLAnnotationProperty labelProp;
+	private OWLDataProperty labelProp;
 	
 	private OWLAnnotationProperty noteProp;
 	private OWLAnnotationProperty codingHintProp;
@@ -36,11 +37,11 @@ public class ICDAPIModel {
 	
 	private OWLAnnotationProperty icd10codeProp;
 	private OWLAnnotationProperty baseIndexProp;
-	private OWLAnnotationProperty indexTypeProp;
-	private OWLAnnotationProperty isInclusionProp;
+	private OWLObjectProperty indexTypeProp;
+	private OWLDataProperty isInclusionProp;
 	
 	private OWLAnnotationProperty subclsBaseInclusionProp;
-	private OWLAnnotationProperty referencedEntityProp;
+	private OWLDataProperty referencedEntityProp;
 	private OWLAnnotationProperty baseExclusionProp;
 	
 	private OWLClass termCls;
@@ -67,7 +68,7 @@ public class ICDAPIModel {
 		defProp = getAnnotationProperty(ICDAPIConstants.DEFINITION);
 		longDefProp = getAnnotationProperty(ICDAPIConstants.LONG_DEFINITION);
 
-		labelProp = getAnnotationProperty(ICDAPIConstants.LABEL);
+		labelProp = getOWLDataProperty(ICDAPIConstants.LABEL);
 		
 		fullNameProp = getAnnotationProperty(ICDAPIConstants.FULLY_SPECIFIED_NAME);
 		exclusionProp = getAnnotationProperty(ICDAPIConstants.EXCLUSION);
@@ -88,17 +89,29 @@ public class ICDAPIModel {
 		
 		narrowerIndexTypeInst = getOWLIndividual(ICDAPIConstants.NARROWER_INST);
 		synonymIndexTypeInst = getOWLIndividual(ICDAPIConstants.SYNONYM_INST);
-		indexTypeProp = getAnnotationProperty(ICDAPIConstants.INDEX_TYPE);
+		indexTypeProp = getOWLObjectProperty(ICDAPIConstants.INDEX_TYPE);
 		baseIndexProp = getAnnotationProperty(ICDAPIConstants.BASE_INDEX_PROP);
-		isInclusionProp = getAnnotationProperty(ICDAPIConstants.IS_INCLUSION);
+		isInclusionProp = getOWLDataProperty(ICDAPIConstants.IS_INCLUSION);
 		
 		subclsBaseInclusionProp = getAnnotationProperty(ICDAPIConstants.SUBCLASS_BASE_INCLUSION_PROP);
-		referencedEntityProp = getAnnotationProperty(ICDAPIConstants.REFERENCED_ENTITY_PROP);
+		referencedEntityProp = getOWLDataProperty(ICDAPIConstants.REFERENCED_ENTITY_PROP);
 		baseExclusionProp = getAnnotationProperty(ICDAPIConstants.BASE_EXCLUSION_PROP);
 	}
 	
 	private OWLAnnotationProperty getAnnotationProperty(String propIRI) {
 		OWLAnnotationProperty p = df.getOWLAnnotationProperty(propIRI);
+		//manager.addAxiom(targetOnt, df.getOWLDeclarationAxiom(p)); //TODO: check if it exists already?
+		return p;
+	}
+	
+	private OWLDataProperty getOWLDataProperty(String propIRI) {
+		OWLDataProperty p = df.getOWLDataProperty(propIRI);
+		//manager.addAxiom(targetOnt, df.getOWLDeclarationAxiom(p)); //TODO: check if it exists already?
+		return p;
+	}
+	
+	private OWLObjectProperty getOWLObjectProperty(String propIRI) {
+		OWLObjectProperty p = df.getOWLObjectProperty(propIRI);
 		//manager.addAxiom(targetOnt, df.getOWLDeclarationAxiom(p)); //TODO: check if it exists already?
 		return p;
 	}
@@ -119,7 +132,7 @@ public class ICDAPIModel {
 		return longDefProp;
 	}
 
-	public OWLAnnotationProperty getLabelProp() {
+	public OWLDataProperty getLabelProp() {
 		return labelProp;
 	}
 	
@@ -205,7 +218,7 @@ public class ICDAPIModel {
 		return synonymIndexTypeInst;
 	}
 	
-	public OWLAnnotationProperty getIndexTypeProp() {
+	public OWLObjectProperty getIndexTypeProp() {
 		return indexTypeProp;
 	}
 	
@@ -213,7 +226,7 @@ public class ICDAPIModel {
 		return baseIndexProp;
 	}
 	
-	public OWLAnnotationProperty isInclusionProp() {
+	public OWLDataProperty isInclusionProp() {
 		return isInclusionProp;
 	}
 	
@@ -221,7 +234,7 @@ public class ICDAPIModel {
 		return subclsBaseInclusionProp;
 	}
  
-	public OWLAnnotationProperty getReferencedEntityProp() {
+	public OWLDataProperty getReferencedEntityProp() {
 		return referencedEntityProp;
 	}
 	
