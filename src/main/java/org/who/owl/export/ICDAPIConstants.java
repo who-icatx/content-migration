@@ -33,9 +33,9 @@ public class ICDAPIConstants {
 	public final static String FOUNDATION_REFERENCE = TARGET_ONT_NS + "foundationReference";
 	
 	public final static String REFERENCED_ENTITY_PROP = TARGET_ONT_NS + "referencedEntity";
-	
-	public final static String NARROWER_INST = TARGET_ONT_NS + "indexType#narrower";
-	public final static String SYNONYM_INST = TARGET_ONT_NS + "indexType#synonym";
+
+	public final static String NARROWER_INST = TARGET_ONT_NS + "IndexType.Narrower";
+	public final static String SYNONYM_INST = TARGET_ONT_NS + "IndexType.Synonym";
 	public final static String INDEX_TYPE = TARGET_ONT_NS + "indexType";
 	public final static String BASE_INDEX_PROP = TARGET_ONT_NS + "baseIndex";
 	
@@ -52,6 +52,9 @@ public class ICDAPIConstants {
 	public final static String IS_INCLUSION = TARGET_ONT_NS + "isInclusion";
 	
 	public final static String BASE_EXCLUSION_PROP = TARGET_ONT_NS + "baseExclusion";
+	
+	public final static String ICF_REFERENCE_PROP = TARGET_ONT_NS + "icfReference";
+	public final static String RELATED_IMPAIRMENT_PROP = TARGET_ONT_NS + "relatedImpairment";
 	
 	public final static String EN_LANG = "en";
 	

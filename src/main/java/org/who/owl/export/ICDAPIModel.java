@@ -44,6 +44,9 @@ public class ICDAPIModel {
 	private OWLDataProperty referencedEntityProp;
 	private OWLAnnotationProperty baseExclusionProp;
 	
+	private OWLAnnotationProperty icfReferenceProp;
+	private OWLAnnotationProperty relatedImpairmentProp;
+	
 	private OWLClass termCls;
 	private OWLClass languageTermCls;
 	private OWLClass baseIndexTermCls;
@@ -96,6 +99,9 @@ public class ICDAPIModel {
 		subclsBaseInclusionProp = getAnnotationProperty(ICDAPIConstants.SUBCLASS_BASE_INCLUSION_PROP);
 		referencedEntityProp = getOWLDataProperty(ICDAPIConstants.REFERENCED_ENTITY_PROP);
 		baseExclusionProp = getAnnotationProperty(ICDAPIConstants.BASE_EXCLUSION_PROP);
+		
+		icfReferenceProp = getAnnotationProperty(ICDAPIConstants.ICF_REFERENCE_PROP);
+		relatedImpairmentProp = getAnnotationProperty(ICDAPIConstants.RELATED_IMPAIRMENT_PROP);
 	}
 	
 	private OWLAnnotationProperty getAnnotationProperty(String propIRI) {
@@ -240,5 +246,13 @@ public class ICDAPIModel {
 	
 	public OWLAnnotationProperty getBaseExcusionProp() {
 		return baseExclusionProp;
+	}
+	
+	public OWLAnnotationProperty getIcfAnnotationProperty() {
+		return icfReferenceProp;
+	}
+	
+	public OWLAnnotationProperty getRelatedImpairmentProperty() {
+		return relatedImpairmentProp;
 	}
 }
