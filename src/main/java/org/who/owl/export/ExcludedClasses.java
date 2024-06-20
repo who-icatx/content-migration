@@ -1,5 +1,6 @@
 package org.who.owl.export;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -38,11 +39,7 @@ public class ExcludedClasses {
 	
 	final public static String TO_BE_RETIRED_STR = "to be retired";
 	final public static String DECISION_TO_BE_MADE_STR = "needing a decision";
-	
-	
-	//TODO: Also exclude:
-	// - all obsolete classes
-	// - all classes and subclasses of "to be retired" and "needing decision to be made"
+
 	
 	private OWLModel owlModel;
 	private ICDContentModel cm;
@@ -55,6 +52,7 @@ public class ExcludedClasses {
 		initExcludedClasses();
 	}
 
+	
 	private void initExcludedClasses() {
 		for (int i = 0; i < EXCLUDED_CLASSES.length; i++) {
 			RDFSNamedClass cls = owlModel.getRDFSNamedClass(EXCLUDED_CLASSES[i]);
@@ -66,16 +64,21 @@ public class ExcludedClasses {
 		}
 	}
 	
+	//TODO - nothing should be excluded for the migration
 	public boolean isExcludedTopClass(RDFSNamedClass cls) {
 		if (excludedClses.contains(cls)) {
 			return true;
 		}
-		
+		return false;
+		//return isRetiredTopParent(cls);
+	}
+	
+	public boolean hasRetiredTitle(RDFSNamedClass cls) {
 		String title = cm.getTitleLabel(cls);
 		if (title != null) {
 			title = title.toLowerCase();
 			
-			if (title.contains(TO_BE_RETIRED_STR) || title.contains(DECISION_TO_BE_MADE_STR)) {
+			if (title.contains(TO_BE_RETIRED_STR)) {
 				return true;
 			}
 		}
@@ -83,4 +86,37 @@ public class ExcludedClasses {
 		return false;
 	}
 	
+
+	
+	public boolean isRetired(RDFSNamedClass cls) {
+		return isRetired(cls, new HashSet<RDFSNamedClass>());
+	}
+
+	private boolean isRetired(RDFSNamedClass cls, HashSet<RDFSNamedClass> traversed) {
+		if (hasRetiredTitle(cls) == true) {
+			return true;
+		}
+		
+		if (traversed.contains(cls)) {
+			return true;
+		}
+		
+		traversed.add(cls);
+		
+		Collection<RDFSNamedClass> parents = cls.getNamedSuperclasses();
+		
+		if (parents.isEmpty()) {
+			return false;
+		}
+		
+		for (RDFSNamedClass parent : parents) {
+			if (isRetired(parent, traversed) == false) {
+				return false;
+			}
+		}
+	
+		return true;
+	}
+	
+
 }

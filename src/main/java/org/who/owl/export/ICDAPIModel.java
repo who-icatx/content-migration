@@ -23,7 +23,7 @@ public class ICDAPIModel {
 	private OWLAnnotationProperty defProp;
 	private OWLAnnotationProperty longDefProp;
 	
-	private OWLDataProperty labelProp;
+	private OWLAnnotationProperty labelProp;
 	
 	private OWLAnnotationProperty noteProp;
 	private OWLAnnotationProperty codingHintProp;
@@ -71,7 +71,7 @@ public class ICDAPIModel {
 		defProp = getAnnotationProperty(ICDAPIConstants.DEFINITION);
 		longDefProp = getAnnotationProperty(ICDAPIConstants.LONG_DEFINITION);
 
-		labelProp = getOWLDataProperty(ICDAPIConstants.LABEL);
+		labelProp = getAnnotationProperty(ICDAPIConstants.LABEL);
 		
 		fullNameProp = getAnnotationProperty(ICDAPIConstants.FULLY_SPECIFIED_NAME);
 		exclusionProp = getAnnotationProperty(ICDAPIConstants.EXCLUSION);
@@ -138,7 +138,7 @@ public class ICDAPIModel {
 		return longDefProp;
 	}
 
-	public OWLDataProperty getLabelProp() {
+	public OWLAnnotationProperty getLabelProp() {
 		return labelProp;
 	}
 	

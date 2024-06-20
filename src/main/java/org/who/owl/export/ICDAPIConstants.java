@@ -13,6 +13,10 @@ public class ICDAPIConstants {
 	
 	public final static String ERROR_CLS = "http://who.int/icd#Z_ErrorClasses";
 	
+	public static final String SOURCE_ICF_ENTITY_CLS = "http://who.int/icd#ICFEntity";
+	public static final String SOURCE_ICD_ENTITY_CLS = "http://who.int/icd#ICDEntity";
+	public static final String SOURCE_ICHI_ENTITY_CLS = "http://who.int/icd#ICHIEntity";
+	
 	public final static String RELEASE_DATE = TARGET_ONT_NS + "releaseDate";
 	public final static String RELEASE_ID = TARGET_ONT_NS + "releaseId";
 	public final static String RELEASE_ID_BETA = "beta";
@@ -47,7 +51,7 @@ public class ICDAPIConstants {
 	
 	public final static String ICD10CODE = TARGET_ONT_NS + "icd10code";
 	
-	public final static String IS_OBSOLETE = TARGET_ONT_NS + "isObsolote";
+	public final static String IS_OBSOLETE = TARGET_ONT_NS + "isObsolete";
 	
 	public final static String IS_INCLUSION = TARGET_ONT_NS + "isInclusion";
 	

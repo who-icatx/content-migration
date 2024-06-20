@@ -122,9 +122,11 @@ public class ICD2OWLMigrator {
 		} catch (OWLOntologyStorageException e) {
 			log.error("Error at saving ontology", e);
 		}
+		
 
 		log.info("\n===== End export at " + new Date());
 	}
+
 
 
 	private static void exportOntology(String ontShortName, OWLModel sourceOnt, OWLOntologyManager manager,
@@ -145,15 +147,17 @@ public class ICD2OWLMigrator {
 
 		log.info("Ended " + ontShortName + " export");
 	}
+	
 
 	public void export() {
 		export(sourceTopClass, sourceOnt.getOWLThingClass());
 	}
 
 	private void export(RDFSNamedClass sourceCls, RDFSNamedClass sourceParent) {
-		if (excludedClasses.isExcludedTopClass(sourceCls) == true) {
+		/*if (excludedClasses.isExcludedTopClass(sourceCls) == true) {
 			return;
 		}
+		*/
 
 		if (traversed.contains(sourceCls) == true) {
 			addSuperCls(sourceCls, sourceParent);
@@ -192,11 +196,20 @@ public class ICD2OWLMigrator {
 
 	private void addChildren(RDFSNamedClass sourceCls) {
 		Set<RDFSNamedClass> subclses = getNamedSubclasses(sourceCls);
+		boolean isRetiredTopParent = excludedClasses.hasRetiredTitle(sourceCls);
 		for (RDFSNamedClass subcls : subclses) {
-			if (excludedClasses.isExcludedTopClass(subcls) == false) {
+			if (excludedClasses.hasRetiredTitle(subcls) == true) { //export the retired top parents
 				addSuperCls(subcls, sourceCls);
 				export(subcls, sourceCls);
 			}
+
+			//do not export truly retired classes. Do this check only in retired branches
+			if (isRetiredTopParent == true && excludedClasses.isRetired(subcls) == true) {
+				continue;
+			}
+			
+			addSuperCls(subcls, sourceCls);
+			export(subcls, sourceCls);
 		}
 	}
 

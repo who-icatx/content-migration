@@ -101,7 +101,8 @@ public class ClassExporter {
 			//add alternative label
 			String label = (String) term.getPropertyValue(cm.getLabelProperty());
 			if (label != null) {
-				OWLDataPropertyAssertionAxiom ax = df.getOWLDataPropertyAssertionAxiom(icdapiModel.getLabelProp(), targetTerm, df.getOWLLiteral(label, ICDAPIConstants.EN_LANG));
+				OWLAnnotation ann = df.getOWLAnnotation(icdapiModel.getLabelProp(), df.getOWLLiteral(label, ICDAPIConstants.EN_LANG));
+				OWLAnnotationAssertionAxiom ax = df.getOWLAnnotationAssertionAxiom(targetTerm.getIRI(), ann);
 				manager.addAxiom(targetOnt, ax);
 			}
 			
@@ -289,7 +290,8 @@ public class ClassExporter {
 		OWLNamedIndividual targetTermInst = df.getOWLNamedIndividual(termInst.getName()); //keep the same IRI of the term. Important
 		manager.addAxiom(targetOnt, df.getOWLClassAssertionAxiom(termCls, targetTermInst));
 		
-		OWLDataPropertyAssertionAxiom ax = df.getOWLDataPropertyAssertionAxiom(icdapiModel.getLabelProp(), targetTermInst, df.getOWLLiteral(label, ICDAPIConstants.EN_LANG) );
+		OWLAnnotation ann = df.getOWLAnnotation(icdapiModel.getLabelProp(), df.getOWLLiteral(label, ICDAPIConstants.EN_LANG));
+		OWLAnnotationAssertionAxiom ax = df.getOWLAnnotationAssertionAxiom(targetTermInst.getIRI(), ann);
 		manager.addAxiom(targetOnt, ax);
 		
 		OWLAnnotation clsAnn = df.getOWLAnnotation(targetProp, targetTermInst.getIRI());
