@@ -93,7 +93,7 @@ public class ClassExporter {
 			if (refCls != null) {
 				IRI refIri = IRI.create(PublicIdCache.getPublicId(cm, refCls));
 					if (refIri != null) {
-						OWLDataPropertyAssertionAxiom ax = df.getOWLDataPropertyAssertionAxiom(icdapiModel.getReferencedEntityProp(), targetTerm, df.getOWLLiteral(refIri.getIRIString()));
+						OWLAnnotationAssertionAxiom ax = df.getOWLAnnotationAssertionAxiom(icdapiModel.getReferencedEntityProp(), targetTerm.getIRI(), refIri);
 						manager.addAxiom(targetOnt, ax);
 					}
 			}
@@ -285,6 +285,9 @@ public class ClassExporter {
 		}
 		
 		termCls = termCls == null ? icdapiModel.getLanguageTermCls() : icdapiModel.getBaseIndexCls();
+		
+		
+		termCls = df.getOWLClass("http://who.int/icd#LanguageTerm");
 		
 		//TODO: some term instance names in old icat are malformed. Check for them, and fix them
 		OWLNamedIndividual targetTermInst = df.getOWLNamedIndividual(termInst.getName()); //keep the same IRI of the term. Important

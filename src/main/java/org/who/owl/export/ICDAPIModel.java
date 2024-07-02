@@ -41,7 +41,7 @@ public class ICDAPIModel {
 	private OWLDataProperty isInclusionProp;
 	
 	private OWLAnnotationProperty subclsBaseInclusionProp;
-	private OWLDataProperty referencedEntityProp;
+	private OWLAnnotationProperty referencedEntityProp;
 	private OWLAnnotationProperty baseExclusionProp;
 	
 	private OWLAnnotationProperty icfReferenceProp;
@@ -97,7 +97,7 @@ public class ICDAPIModel {
 		isInclusionProp = getOWLDataProperty(ICDAPIConstants.IS_INCLUSION);
 		
 		subclsBaseInclusionProp = getAnnotationProperty(ICDAPIConstants.SUBCLASS_BASE_INCLUSION_PROP);
-		referencedEntityProp = getOWLDataProperty(ICDAPIConstants.REFERENCED_ENTITY_PROP);
+		referencedEntityProp = getAnnotationProperty(ICDAPIConstants.REFERENCED_ENTITY_PROP);
 		baseExclusionProp = getAnnotationProperty(ICDAPIConstants.BASE_EXCLUSION_PROP);
 		
 		icfReferenceProp = getAnnotationProperty(ICDAPIConstants.ICF_REFERENCE_PROP);
@@ -106,19 +106,16 @@ public class ICDAPIModel {
 	
 	private OWLAnnotationProperty getAnnotationProperty(String propIRI) {
 		OWLAnnotationProperty p = df.getOWLAnnotationProperty(propIRI);
-		//manager.addAxiom(targetOnt, df.getOWLDeclarationAxiom(p)); //TODO: check if it exists already?
 		return p;
 	}
 	
 	private OWLDataProperty getOWLDataProperty(String propIRI) {
 		OWLDataProperty p = df.getOWLDataProperty(propIRI);
-		//manager.addAxiom(targetOnt, df.getOWLDeclarationAxiom(p)); //TODO: check if it exists already?
 		return p;
 	}
 	
 	private OWLObjectProperty getOWLObjectProperty(String propIRI) {
 		OWLObjectProperty p = df.getOWLObjectProperty(propIRI);
-		//manager.addAxiom(targetOnt, df.getOWLDeclarationAxiom(p)); //TODO: check if it exists already?
 		return p;
 	}
 
@@ -240,7 +237,7 @@ public class ICDAPIModel {
 		return subclsBaseInclusionProp;
 	}
  
-	public OWLDataProperty getReferencedEntityProp() {
+	public OWLAnnotationProperty getReferencedEntityProp() {
 		return referencedEntityProp;
 	}
 	

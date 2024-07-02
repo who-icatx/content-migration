@@ -38,7 +38,7 @@ public class ICD2OWLMigrator {
 
 	private final static Logger log = Logger.getLogger(ICD2OWLMigrator.class);
 	
-	private static String CM_FILE_PATH = "contentmodel/cm.owl";
+	private static String CM_FILE_PATH = "contentmodel/contentmodel.owl";
 
 	private OWLModel sourceOnt;
 
