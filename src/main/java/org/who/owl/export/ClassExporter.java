@@ -3,6 +3,7 @@ package org.who.owl.export;
 import java.util.Collection;
 
 import org.apache.log4j.Logger;
+import org.json.simple.JSONObject;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLAnnotation;
 import org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom;
@@ -32,6 +33,7 @@ public class ClassExporter {
     private ICDContentModel cm;
     private ICDAPIModel icdapiModel;
     private LogicalDefinitionCreator logDefCreator;
+    private LinearziationExporter linearizationExporter;
     
     private RDFSNamedClass sourceCls;
     
@@ -39,7 +41,8 @@ public class ClassExporter {
     
 
 	public ClassExporter(RDFSNamedClass cls, OWLOntologyManager manager, 
-			OWLOntology targetOnt, ICDContentModel cm, ICDAPIModel icdapiModel, boolean isICTM) {
+			OWLOntology targetOnt, ICDContentModel cm, ICDAPIModel icdapiModel,
+			JSONObject jsonObject, boolean isICTM) {
 		this.sourceCls = cls;
 		this.manager = manager;
 		this.df = manager.getOWLDataFactory();
@@ -48,6 +51,7 @@ public class ClassExporter {
 		this.icdapiModel = icdapiModel;
 		this.isICTM = isICTM;
 		this.logDefCreator = new LogicalDefinitionCreator(cm, icdapiModel, manager, targetOnt);
+		this.linearizationExporter = new LinearziationExporter(cls, cm, jsonObject);
 	}
     
 	public OWLClass export() {
@@ -75,6 +79,8 @@ public class ClassExporter {
 		addRelatedImpairment(cls);
 		
 		addLogicalDefinition(cls);
+		
+		exportLinearizations(cls);
 		
 		return cls;
 	}
@@ -217,6 +223,9 @@ public class ClassExporter {
 		logDefCreator.createLogicalAxioms(sourceCls, cls);
 	}
 
+	private void exportLinearizations(OWLClass cls) {
+		linearizationExporter.exportLinearizations(cls);
+	}
 	
 	/******************* Generic methods ********************/
 	

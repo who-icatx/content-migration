@@ -1,6 +1,8 @@
 package org.who.owl.export;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -11,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.json.simple.JSONObject;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.AddImport;
 import org.semanticweb.owlapi.model.AddOntologyAnnotation;
@@ -56,9 +59,11 @@ public class ICD2OWLMigrator {
 
 	private int exportedClassesCount = 0;
 	private boolean isICTM = false;
+	
+	private JSONObject jsonObject;
 
 	public ICD2OWLMigrator(OWLModel sourceOnt, OWLOntologyManager manager, ICDAPIModel icdapiModel,
-			OWLOntology targetOnt, RDFSNamedClass sourceTopClass) {
+			OWLOntology targetOnt, RDFSNamedClass sourceTopClass, JSONObject jsonObject) {
 		this.sourceOnt = sourceOnt;
 		this.manager = manager;
 		this.targetOnt = targetOnt;
@@ -67,6 +72,7 @@ public class ICD2OWLMigrator {
 		this.excludedClasses = new ExcludedClasses(sourceOnt, cm);
 		this.icdapiModel = icdapiModel;
 		this.isICTM = ICTMUtil.isICTMOntology(sourceOnt);
+		this.jsonObject = jsonObject;
 	}
 
 	public static void main(String[] args) {
@@ -100,11 +106,14 @@ public class ICD2OWLMigrator {
 		ICDAPIModel icdapiModel = new ICDAPIModel(manager, targetOnt);
 		
 		initTargetOntMetadata(manager,targetOnt, icdapiModel);
-
-
+		
 		SystemUtilities.logSystemInfo();
+		
+		JSONObject jsonObj = new JSONObject();
+		jsonObj.put(LinearziationExporter.WHOFIC_LINEARIZATION_SPECIFICATIONS_JSON_KEY, new ArrayList<Map<String, Object>>());
 
-		exportOntology("ICD", sourceICDOnt, manager, icdapiModel, targetOnt, sourceICDTopClass, outputOWLFile);
+		exportOntology("ICD", sourceICDOnt, manager, icdapiModel, targetOnt, sourceICDTopClass, 
+				outputOWLFile, jsonObj);
 		
 		log.info("Starting post-processing ..");
 		try {
@@ -123,20 +132,40 @@ public class ICD2OWLMigrator {
 			log.error("Error at saving ontology", e);
 		}
 		
+		saveLinearizationFile(args[2], jsonObj);
+		
 
 		log.info("\n===== End export at " + new Date());
 	}
 
 
 
+	private static void saveLinearizationFile(String owlFilePath, JSONObject jsonObj) {
+		String linfile = owlFilePath.replace(".owl", ".lin.json");
+		log.info("Saving linearization file to: " + linfile);
+		
+		try (FileWriter fileWriter = new FileWriter(linfile)) {
+
+			jsonObj.writeJSONString(fileWriter);
+			//fileWriter.write(jsonObj.toJSONString());
+			fileWriter.flush();
+			fileWriter.close();
+
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	private static void exportOntology(String ontShortName, OWLModel sourceOnt, OWLOntologyManager manager,
-			ICDAPIModel icdapiModel, OWLOntology targetOnt, RDFSNamedClass sourceTopClass, String outputOWLFile) {
+			ICDAPIModel icdapiModel, OWLOntology targetOnt, RDFSNamedClass sourceTopClass, 
+			String outputOWLFile, JSONObject jsonObject) {
 
 		log.info("Started the " + ontShortName + " export");
 		log.info("Top class: " + sourceTopClass.getBrowserText());
 		log.info("Output file: " + outputOWLFile);
 
-		ICD2OWLMigrator icdConv = new ICD2OWLMigrator(sourceOnt, manager, icdapiModel, targetOnt, sourceTopClass);
+		ICD2OWLMigrator icdConv = new ICD2OWLMigrator(sourceOnt, manager, icdapiModel, targetOnt, 
+				sourceTopClass, jsonObject);
 
 		try {
 			icdConv.export();
@@ -168,7 +197,8 @@ public class ICD2OWLMigrator {
 
 		try {
 			ClassExporter clsExporter = new ClassExporter(sourceCls, manager, targetOnt, cm, icdapiModel,
-					isICTM);
+					jsonObject, isICTM);
+			
 			OWLClass targetCls = clsExporter.export();
 
 			source2targetCls.put(sourceCls, targetCls);
@@ -340,5 +370,4 @@ public class ICD2OWLMigrator {
 		OWLAnnotation owlVersionAnn = df.getOWLAnnotation(df.getOWLVersionInfo(), df.getOWLLiteral(dateStr));
 		manager.applyChange(new AddOntologyAnnotation(targetOnt, owlVersionAnn));
 	}
-	
 }
