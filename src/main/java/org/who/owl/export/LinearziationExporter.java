@@ -23,15 +23,15 @@ public class LinearziationExporter {
 
 	private ICDContentModel cm;
 	private RDFSNamedClass sourceCls;
-	private JSONObject jsonObject;
+	private JSONObject linJsonObject;
 
 	public LinearziationExporter(RDFSNamedClass cls, ICDContentModel cm, JSONObject jsonObject) {
 		this.cm = cm;
 		this.sourceCls = cls;
-		this.jsonObject = jsonObject;
+		this.linJsonObject = jsonObject;
 	}
 
-	public void exportLinearizations(OWLClass targetCls) {
+	public void export(OWLClass targetCls) {
 		Map<String, Object> linSpecMap = new HashMap<String, Object>();
 
 		Map<String, String> residualsMap = exportResiduals(targetCls);
@@ -44,10 +44,10 @@ public class LinearziationExporter {
 			linSpecMap.put("linearizationResiduals", residualsMap);
 		}
 
-		List<Map<String, Object>> linList = (List<Map<String, Object>>) jsonObject.get(WHOFIC_LINEARIZATION_SPECIFICATIONS_JSON_KEY);
+		List<Map<String, Object>> linList = (List<Map<String, Object>>) linJsonObject.get(WHOFIC_LINEARIZATION_SPECIFICATIONS_JSON_KEY);
 		linList.add(linSpecMap);
 
-		jsonObject.put(WHOFIC_LINEARIZATION_SPECIFICATIONS_JSON_KEY, linList);
+		linJsonObject.put(WHOFIC_LINEARIZATION_SPECIFICATIONS_JSON_KEY, linList);
 	}
 
 	private List<Map<String, String>> exportLinSpecs(OWLClass targetCls) {

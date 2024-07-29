@@ -1,15 +1,13 @@
 package org.who.owl.export;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
 
 import edu.stanford.bmir.whofic.icd.ICDContentModelConstants;
 
+//This class is not used, keeping it for now for the content
 public class ICDPostCoordinationMaps {
 	
 	private static transient Logger log = Logger.getLogger(ICDPostCoordinationMaps.class);
@@ -73,4 +71,6 @@ public class ICDPostCoordinationMaps {
 		/***** External causes axes - ignored for now *****/
 		
 	}};
+	
+	public final static String POSTCOORDINATION_AXIS_PROP = "http://who.int/icd#postcoordinationAxis";
 }

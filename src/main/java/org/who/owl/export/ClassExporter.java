@@ -34,6 +34,8 @@ public class ClassExporter {
     private ICDAPIModel icdapiModel;
     private LogicalDefinitionCreator logDefCreator;
     private LinearziationExporter linearizationExporter;
+    private PostcoordinationSpecificationExporter pcSpecExporter;
+    private PostcoordinationCustomScaleExporter pcCustomScaleExporter;
     
     private RDFSNamedClass sourceCls;
     
@@ -42,7 +44,8 @@ public class ClassExporter {
 
 	public ClassExporter(RDFSNamedClass cls, OWLOntologyManager manager, 
 			OWLOntology targetOnt, ICDContentModel cm, ICDAPIModel icdapiModel,
-			JSONObject jsonObject, boolean isICTM) {
+			JSONObject linJsonObject, JSONObject pcSPecJsonObject, JSONObject pcCustomScaleJsonObject,
+			boolean isICTM) {
 		this.sourceCls = cls;
 		this.manager = manager;
 		this.df = manager.getOWLDataFactory();
@@ -51,7 +54,10 @@ public class ClassExporter {
 		this.icdapiModel = icdapiModel;
 		this.isICTM = isICTM;
 		this.logDefCreator = new LogicalDefinitionCreator(cm, icdapiModel, manager, targetOnt);
-		this.linearizationExporter = new LinearziationExporter(cls, cm, jsonObject);
+		
+		this.linearizationExporter = new LinearziationExporter(cls, cm, linJsonObject);
+		this.pcSpecExporter = new PostcoordinationSpecificationExporter(cls, cm, pcSPecJsonObject);
+		this.pcCustomScaleExporter = new PostcoordinationCustomScaleExporter(cls, cm, pcCustomScaleJsonObject);
 	}
     
 	public OWLClass export() {
@@ -81,6 +87,8 @@ public class ClassExporter {
 		addLogicalDefinition(cls);
 		
 		exportLinearizations(cls);
+		exportPcSpecifications(cls);
+		exportPcCustomScales(cls);
 		
 		return cls;
 	}
@@ -224,7 +232,15 @@ public class ClassExporter {
 	}
 
 	private void exportLinearizations(OWLClass cls) {
-		linearizationExporter.exportLinearizations(cls);
+		linearizationExporter.export(cls);
+	}
+	
+	private void exportPcSpecifications(OWLClass cls) {
+		pcSpecExporter.export(cls);
+	}
+	
+	private void exportPcCustomScales(OWLClass cls) {
+		pcCustomScaleExporter.export(cls);
 	}
 	
 	/******************* Generic methods ********************/

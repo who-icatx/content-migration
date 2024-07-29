@@ -60,10 +60,13 @@ public class ICD2OWLMigrator {
 	private int exportedClassesCount = 0;
 	private boolean isICTM = false;
 	
-	private JSONObject jsonObject;
+	private JSONObject linearizationJsonObject;
+	private JSONObject pcSpecJsonObject;
+	private JSONObject pcCustomScaleJsonObject;
 
 	public ICD2OWLMigrator(OWLModel sourceOnt, OWLOntologyManager manager, ICDAPIModel icdapiModel,
-			OWLOntology targetOnt, RDFSNamedClass sourceTopClass, JSONObject jsonObject) {
+			OWLOntology targetOnt, RDFSNamedClass sourceTopClass, 
+			JSONObject linJsonObject, JSONObject pcSpecJsonObject, JSONObject pcCustomScaleJsonObject) {
 		this.sourceOnt = sourceOnt;
 		this.manager = manager;
 		this.targetOnt = targetOnt;
@@ -72,7 +75,9 @@ public class ICD2OWLMigrator {
 		this.excludedClasses = new ExcludedClasses(sourceOnt, cm);
 		this.icdapiModel = icdapiModel;
 		this.isICTM = ICTMUtil.isICTMOntology(sourceOnt);
-		this.jsonObject = jsonObject;
+		this.linearizationJsonObject = linJsonObject;
+		this.pcSpecJsonObject = pcSpecJsonObject;
+		this.pcCustomScaleJsonObject = pcCustomScaleJsonObject;
 	}
 
 	public static void main(String[] args) {
@@ -109,11 +114,18 @@ public class ICD2OWLMigrator {
 		
 		SystemUtilities.logSystemInfo();
 		
-		JSONObject jsonObj = new JSONObject();
-		jsonObj.put(LinearziationExporter.WHOFIC_LINEARIZATION_SPECIFICATIONS_JSON_KEY, new ArrayList<Map<String, Object>>());
+		JSONObject linJsonObj = new JSONObject();
+		linJsonObj.put(LinearziationExporter.WHOFIC_LINEARIZATION_SPECIFICATIONS_JSON_KEY, new ArrayList<Map<String, Object>>());
 
+		JSONObject pcSpecJsonObj = new JSONObject();
+		pcSpecJsonObj.put(PostcoordinationSpecificationExporter.WHOFIC_POSTCOORDINATION_SPECIFICATIONS_JSON_KEY, new ArrayList<Map<String, Object>>());
+
+		JSONObject pcCustomScaleJsonObj = new JSONObject();
+		pcCustomScaleJsonObj.put(PostcoordinationCustomScaleExporter.WHOFIC_POSTCOORDINATION_SCALE_CUSTOMIZATION_JSON_KEY, new ArrayList<Map<String, Object>>());
+
+		
 		exportOntology("ICD", sourceICDOnt, manager, icdapiModel, targetOnt, sourceICDTopClass, 
-				outputOWLFile, jsonObj);
+				outputOWLFile, linJsonObj, pcSpecJsonObj, pcCustomScaleJsonObj);
 		
 		log.info("Starting post-processing ..");
 		try {
@@ -132,7 +144,9 @@ public class ICD2OWLMigrator {
 			log.error("Error at saving ontology", e);
 		}
 		
-		saveLinearizationFile(args[2], jsonObj);
+		saveJsonFile(args[2], linJsonObj, ".lin.json");
+		saveJsonFile(args[2], pcSpecJsonObj, ".pcSpec.json");
+		saveJsonFile(args[2], pcCustomScaleJsonObj, ".pcCustomScale.json");
 		
 
 		log.info("\n===== End export at " + new Date());
@@ -140,14 +154,13 @@ public class ICD2OWLMigrator {
 
 
 
-	private static void saveLinearizationFile(String owlFilePath, JSONObject jsonObj) {
-		String linfile = owlFilePath.replace(".owl", ".lin.json");
-		log.info("Saving linearization file to: " + linfile);
+	private static void saveJsonFile(String owlFilePath, JSONObject jsonObj, String extensionReplacement) {
+		String linfile = owlFilePath.replace(".owl", extensionReplacement);
+		log.info("Saving JSON file to: " + linfile);
 		
 		try (FileWriter fileWriter = new FileWriter(linfile)) {
 
 			jsonObj.writeJSONString(fileWriter);
-			//fileWriter.write(jsonObj.toJSONString());
 			fileWriter.flush();
 			fileWriter.close();
 
@@ -155,17 +168,18 @@ public class ICD2OWLMigrator {
 			throw new RuntimeException(e);
 		}
 	}
+	
 
 	private static void exportOntology(String ontShortName, OWLModel sourceOnt, OWLOntologyManager manager,
 			ICDAPIModel icdapiModel, OWLOntology targetOnt, RDFSNamedClass sourceTopClass, 
-			String outputOWLFile, JSONObject jsonObject) {
+			String outputOWLFile, JSONObject jsonObject, JSONObject pcSpecJsonObj, JSONObject pcCustomScaleJsonObj) {
 
 		log.info("Started the " + ontShortName + " export");
 		log.info("Top class: " + sourceTopClass.getBrowserText());
 		log.info("Output file: " + outputOWLFile);
 
 		ICD2OWLMigrator icdConv = new ICD2OWLMigrator(sourceOnt, manager, icdapiModel, targetOnt, 
-				sourceTopClass, jsonObject);
+				sourceTopClass, jsonObject, pcSpecJsonObj, pcCustomScaleJsonObj);
 
 		try {
 			icdConv.export();
@@ -197,7 +211,7 @@ public class ICD2OWLMigrator {
 
 		try {
 			ClassExporter clsExporter = new ClassExporter(sourceCls, manager, targetOnt, cm, icdapiModel,
-					jsonObject, isICTM);
+					linearizationJsonObject, pcSpecJsonObject, pcCustomScaleJsonObject, isICTM);
 			
 			OWLClass targetCls = clsExporter.export();
 
