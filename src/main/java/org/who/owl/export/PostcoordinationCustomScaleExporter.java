@@ -86,10 +86,9 @@ public class PostcoordinationCustomScaleExporter {
 		Map<String, Object> customScaleMap = new HashMap<String, Object>();
 		customScaleMap.put("postcoordinationAxis", getPostcoordinationAxisName(pcProp.getName()));
 		
-		List<Map<String,String>> customScaleValueList = new ArrayList<Map<String,String>>();
+		List<String> customScaleValueList = new ArrayList<String>();
 		
 		for (RDFResource refTerm : refTerms) {
-			Map<String,String> scaleValueMap = new HashMap<String, String>();
 			RDFSNamedClass refValue = (RDFSNamedClass) refTerm.getPropertyValue(cm.getReferencedValueProperty());
 			if (refValue != null) {
 				String publicId = PublicIdCache.getPublicId(cm, refValue);
@@ -97,10 +96,7 @@ public class PostcoordinationCustomScaleExporter {
 					log.warn("Could not find public id for: " + refValue + ", " + refValue.getBrowserText() + ", while exporting PC custom scale values for pc axis: " + pcProp);
 					continue;
 				} else {
-					scaleValueMap.put("scaleValueTopClass", publicId);
-				}
-				if (scaleValueMap.isEmpty() == false) {
-					customScaleValueList.add(scaleValueMap);
+					customScaleValueList.add(publicId);
 				}
 			}
 		}
