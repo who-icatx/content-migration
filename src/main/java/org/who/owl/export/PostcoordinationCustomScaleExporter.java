@@ -98,10 +98,6 @@ public class PostcoordinationCustomScaleExporter {
 					continue;
 				} else {
 					scaleValueMap.put("scaleValueTopClass", publicId);
-					String description = (String) refTerm.getPropertyValue(descriptionProp);
-					if (description != null && description.isBlank() == false) {
-						scaleValueMap.put("description", description);
-					}
 				}
 				if (scaleValueMap.isEmpty() == false) {
 					customScaleValueList.add(scaleValueMap);
