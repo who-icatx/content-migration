@@ -116,17 +116,22 @@ public class LinearziationExporter {
 			}
 		}
 
-		exportBooleanLinProp(linSpec, cm.getIsIncludedInLinearizationProperty(), "isIncludedInLinearization", linMap);
-		exportBooleanLinProp(linSpec, cm.getIsGroupingProperty(), "isGrouping", linMap);
-		exportBooleanLinProp(linSpec, cm.getIsAuxiliaryAxisChildProperty(), "isAuxiliaryAxisChild", linMap);
+		exportBooleanLinProp(linSpec, cm.getIsIncludedInLinearizationProperty(), "isIncludedInLinearization", false, linMap);
+		exportBooleanLinProp(linSpec, cm.getIsGroupingProperty(), "isGrouping", true, linMap);
+		exportBooleanLinProp(linSpec, cm.getIsAuxiliaryAxisChildProperty(), "isAuxiliaryAxisChild", true, linMap);
 
 		return linMap;
 	}
 	
 
-	private void exportBooleanLinProp(RDFResource linSpec, RDFProperty prop, String jsonKey, Map<String, String> map) {
+	private void exportBooleanLinProp(RDFResource linSpec, RDFProperty prop, String jsonKey, 
+			boolean replaceUnkownWithFalse, Map<String, String> map) {
 		Boolean bool = (Boolean) linSpec.getPropertyValue(prop);
 
+		if (bool == null && replaceUnkownWithFalse == true) {
+			bool = Boolean.FALSE;
+		}
+		
 		String value = bool == null ? "unknown" : bool.toString();
 		
 		map.put(jsonKey, value);
