@@ -82,22 +82,24 @@ public class PostcoordinationSpecificationExporter {
 		Collection<RDFResource> allowedAxes = (Collection<RDFResource>) pcSpec.getDirectOwnSlotValues(cm.getAllowedPostcoordinationAxisPropertyProperty());
 		
 		if (allowedAxes != null && allowedAxes.isEmpty() == false) {
-			pcSpecMap.put("allowedAxes", getResourceNameList(allowedAxes));
+			pcSpecMap.put("allowedAxes", getAxesNameList(allowedAxes));
 		}
 		
 		Collection<RDFResource> requiredAxes = (Collection<RDFResource>) pcSpec.getPropertyValues(cm.getRequiredPostcoordinationAxisPropertyProperty());
 		
 		if (requiredAxes != null && requiredAxes.isEmpty() == false) {
-			pcSpecMap.put("requiredAxes", getResourceNameList(requiredAxes));
+			pcSpecMap.put("requiredAxes", getAxesNameList(requiredAxes));
 		}
 		
 		return pcSpecMap;
 	}
 	
-	private List<String> getResourceNameList(Collection<RDFResource> resList) {
+	private List<String> getAxesNameList(Collection<RDFResource> resList) {
 		List<String> names = new ArrayList<String>();
 		for (RDFResource res : resList) {
-			names.add(res.getName());
+			String axisSourceName = res.getName();
+			String targetName = axisSourceName.replace(ICDAPIConstants.SOURCE_ONT_NS, ICDAPIConstants.TARGET_POSTCOORDINATION_NS);
+			names.add(targetName);
 		}
 		
 		return names;
