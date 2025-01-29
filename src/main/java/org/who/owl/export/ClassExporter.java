@@ -33,9 +33,11 @@ public class ClassExporter {
     private ICDContentModel cm;
     private ICDAPIModel icdapiModel;
     private LogicalDefinitionCreator logDefCreator;
+    
     private LinearziationExporter linearizationExporter;
     private PostcoordinationSpecificationExporter pcSpecExporter;
     private PostcoordinationCustomScaleExporter pcCustomScaleExporter;
+    private OrderedSiblingsExporter orderedSiblingsExporter;
     
     private RDFSNamedClass sourceCls;
     
@@ -45,6 +47,7 @@ public class ClassExporter {
 	public ClassExporter(RDFSNamedClass cls, OWLOntologyManager manager, 
 			OWLOntology targetOnt, ICDContentModel cm, ICDAPIModel icdapiModel,
 			JSONObject linJsonObject, JSONObject pcSPecJsonObject, JSONObject pcCustomScaleJsonObject,
+			JSONObject orderedSiblingsJsonObject,
 			boolean isICTM) {
 		this.sourceCls = cls;
 		this.manager = manager;
@@ -58,6 +61,7 @@ public class ClassExporter {
 		this.linearizationExporter = new LinearziationExporter(cls, cm, linJsonObject);
 		this.pcSpecExporter = new PostcoordinationSpecificationExporter(cls, cm, pcSPecJsonObject);
 		this.pcCustomScaleExporter = new PostcoordinationCustomScaleExporter(cls, cm, pcCustomScaleJsonObject);
+		this.orderedSiblingsExporter = new OrderedSiblingsExporter(cls, cm, orderedSiblingsJsonObject);
 	}
     
 	public OWLClass export() {
@@ -89,6 +93,8 @@ public class ClassExporter {
 		exportLinearizations(cls);
 		exportPcSpecifications(cls);
 		exportPcCustomScales(cls);
+		
+		exportSiblingOrdering(cls);
 		
 		return cls;
 	}
@@ -241,6 +247,10 @@ public class ClassExporter {
 	
 	private void exportPcCustomScales(OWLClass cls) {
 		pcCustomScaleExporter.export(cls);
+	}
+	
+	private void exportSiblingOrdering(OWLClass cls) {
+		orderedSiblingsExporter.export(cls);
 	}
 	
 	/******************* Generic methods ********************/
