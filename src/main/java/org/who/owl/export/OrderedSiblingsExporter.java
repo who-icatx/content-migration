@@ -60,8 +60,45 @@ public class OrderedSiblingsExporter {
 	}
 
 
+	/**
+	 * This method will create the JSON structure for one ordered child {@code [orderedChild, orderedChildIndex]},
+	 * which is part of the {@code orderedChildren} list.
+	 * <pre>{@code
+	 * 
+	 * "orderedChildren": [
+    {
+        "entityURI": "http://id.who.int/icd/entity/257068234", //Bacterial intestinal infections - parent 1 of Cholera
+        
+        "orderedChildren": [
+            {
+                "orderedChild": "http://id.who.int/icd/entity/257068234", //Cholera
+                "orderedChildIndex": "2000000",
+            },
+            
+            {
+                "orderedChild": "http://id.who.int/icd/entity/1561949126", //Intestinal infection due to other Vibrio
+                "orderedChildIndex": "2500000",
+            },
+            ...
+         ]
+	 * }
+	 * </pre>
+	 * 
+	 * If the orderedChild or the orderedChildIndex are missing, then the entire orderedChildren will not be added in JSON.
+	 * Alternatively, you can call:
+	 * 
+	 * <pre>
+	 * 		SiblingReordering so = new SiblingReordering(cm);
+	 * 		so.checkIndexAndRecreate(sourceCls, true);
+	 * </pre>
+	 * 
+	 * which will recreate the index for sourceCls, but it will also be a write operation in the KB.
+	 * 
+	 * @param orderedChildSpec
+	 * @return
+	 */
 	private Map<String, String> exportOrderedChild(RDFResource orderedChildSpec) {
-
+		
 		RDFResource orderedChild = (RDFResource) orderedChildSpec.getPropertyValue(cm.getOrderedChildProperty());
 
 		if (orderedChild == null) {
