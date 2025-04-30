@@ -319,11 +319,10 @@ public class ClassExporter {
 			return;
 		}
 		
-		termCls = termCls == null ? icdapiModel.getLanguageTermCls() : icdapiModel.getBaseIndexCls();
-		
-		
-		termCls = df.getOWLClass("http://who.int/icd#LanguageTerm");
-		
+		if (termCls == null) {
+			termCls = icdapiModel.getLanguageTermCls();
+		}
+
 		//TODO: some term instance names in old icat are malformed. Check for them, and fix them
 		OWLNamedIndividual targetTermInst = df.getOWLNamedIndividual(termInst.getName()); //keep the same IRI of the term. Important
 		manager.addAxiom(targetOnt, df.getOWLClassAssertionAxiom(termCls, targetTermInst));
@@ -347,7 +346,15 @@ public class ClassExporter {
 			OWLDataPropertyAssertionAxiom ax1 = df.getOWLDataPropertyAssertionAxiom(icdapiModel.isInclusionProp(), targetTermInst, df.getOWLLiteral(true));
 			manager.addAxiom(targetOnt, ax1);
 		}
-		
+	
+		//add deprecation, if necessary. Theoretically only base index terms should be deprecatable, 
+		//but it won't hurt to deprecate, even if not.
+		Boolean isDeprecated = (Boolean) termInst.getPropertyValue(cm.getIsDeprecatedProperty());
+		if (isDeprecated != null && isDeprecated.equals(Boolean.TRUE)) {
+			OWLAnnotation deprecAnn = df.getOWLAnnotation(df.getOWLAnnotationProperty(OWLRDFVocabulary.OWL_DEPRECATED.getIRI()), df.getOWLLiteral(Boolean.TRUE));
+			OWLAnnotationAssertionAxiom annotationAssertionAxiom = df.getOWLAnnotationAssertionAxiom(targetTermInst.getIRI(), deprecAnn);
+			manager.addAxiom(targetOnt, annotationAssertionAxiom);
+		}
 	}
 		
 	
