@@ -252,4 +252,5 @@ public class ICDAPIModel {
 	public OWLAnnotationProperty getRelatedImpairmentProperty() {
 		return relatedImpairmentProp;
 	}
+	
 }

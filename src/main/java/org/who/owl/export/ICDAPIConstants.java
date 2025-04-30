@@ -60,6 +60,8 @@ public class ICDAPIConstants {
 	public final static String ICF_REFERENCE_PROP = TARGET_ONT_NS + "icfReference";
 	public final static String RELATED_IMPAIRMENT_PROP = TARGET_ONT_NS + "relatedImpairment";
 	
+	public final static String WHOFIC_CLASSIFICATION_TYPE_PROP = TARGET_ONT_NS + "whoficClassificationType";
+	
 	public final static String EN_LANG = "en";
 	
 	
@@ -70,5 +72,17 @@ public class ICDAPIConstants {
 	public final static String BASE_INDEX_TERM_CLS = TARGET_ONT_NS + "BaseIndexTerm";
 	
 	public final static String BASE_EXCLUSION_TERM_CLS = TARGET_ONT_NS + "BaseExclusionTerm";
+	
+	
+	// ************************ WHOFIC CLASSIFICATION TYPES ************************** //
+	
+	public final static String WHOFIC_CLASSIFICATION_TYPE_NS = TARGET_ONT_NS;
+	
+	public final static String WHOFIC_CLASSIFICATION_TYPE_ICD_EXT_CODE = WHOFIC_CLASSIFICATION_TYPE_NS + "ICDExtensionCode";
+	public final static String WHOFIC_CLASSIFICATION_TYPE_ICF_EXT_CODE = WHOFIC_CLASSIFICATION_TYPE_NS + "ICFExtensionCode";
+	public final static String WHOFIC_CLASSIFICATION_TYPE_ICHI_EXT_CODE = WHOFIC_CLASSIFICATION_TYPE_NS + "ICHIExtensionCode";
+	
+	
+	
 	
 }
