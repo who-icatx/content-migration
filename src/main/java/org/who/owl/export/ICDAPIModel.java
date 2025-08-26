@@ -44,6 +44,8 @@ public class ICDAPIModel {
 	private OWLAnnotationProperty referencedEntityProp;
 	private OWLAnnotationProperty baseExclusionProp;
 	
+	private OWLAnnotationProperty diagnosticCriteriaProp;
+	
 	private OWLAnnotationProperty icfReferenceProp;
 	private OWLAnnotationProperty relatedImpairmentProp;
 	
@@ -99,6 +101,8 @@ public class ICDAPIModel {
 		subclsBaseInclusionProp = getAnnotationProperty(ICDAPIConstants.SUBCLASS_BASE_INCLUSION_PROP);
 		referencedEntityProp = getAnnotationProperty(ICDAPIConstants.REFERENCED_ENTITY_PROP);
 		baseExclusionProp = getAnnotationProperty(ICDAPIConstants.BASE_EXCLUSION_PROP);
+		
+		diagnosticCriteriaProp = getAnnotationProperty(ICDAPIConstants.DIAGNOSTIC_CRITERIA_PROP);
 		
 		icfReferenceProp = getAnnotationProperty(ICDAPIConstants.ICF_REFERENCE_PROP);
 		relatedImpairmentProp = getAnnotationProperty(ICDAPIConstants.RELATED_IMPAIRMENT_PROP);
@@ -243,6 +247,10 @@ public class ICDAPIModel {
 	
 	public OWLAnnotationProperty getBaseExcusionProp() {
 		return baseExclusionProp;
+	}
+	
+	public OWLAnnotationProperty getDiagnosticCriteriaProp() {
+		return diagnosticCriteriaProp;
 	}
 	
 	public OWLAnnotationProperty getIcfAnnotationProperty() {

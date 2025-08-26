@@ -85,6 +85,8 @@ public class ClassExporter {
 		
 		addIsObosolte(cls);
 		
+		addDiagnosticCriteria(cls);
+		
 		addICFReference(cls);
 		addRelatedImpairment(cls);
 		
@@ -207,6 +209,12 @@ public class ClassExporter {
 	}
 	
 
+	private void addDiagnosticCriteria(OWLClass cls) {
+		addLanguageTermAnnotations(cls, icdapiModel.getDiagnosticCriteriaProp(), 
+			cm.getDiagnosticCriteriaProperty(), null, null, cm.getDiagnosticCriteriaTextProperty(), true);
+	}
+	
+
 	private void addRelatedImpairment(OWLClass cls) {
 		addLanguageTermAnnotations(cls, icdapiModel.getRelatedImpairmentProperty(), cm.getRelatedImpairmentProperty());
 	}
@@ -306,15 +314,26 @@ public class ClassExporter {
 	
 	private void addLanguageTermAnnotations(OWLClass cls, OWLAnnotationProperty targetProp, 
 			RDFProperty sourceProp, OWLClass termCls, OWLNamedIndividual indexType) {
+		addLanguageTermAnnotations(cls, targetProp, sourceProp, termCls, indexType, cm.getLabelProperty(), false);
+	}
+	
+	private void addLanguageTermAnnotations(OWLClass cls, OWLAnnotationProperty targetProp, 
+			RDFProperty sourceProp, OWLClass termCls, OWLNamedIndividual indexType, 
+			RDFProperty termValueProp, boolean onlyFirst) {
 		Collection<RDFResource> terms = cm.getTerms(sourceCls, sourceProp);
+		boolean nextValueToBeAdded = true;	//first value should be always added
 		for (RDFResource term : terms) {
-			addLanguageTermAnnotationFromTerm(cls, targetProp, sourceProp, term, termCls, indexType);
+			if (nextValueToBeAdded) {
+				addLanguageTermAnnotationFromTerm(cls, targetProp, sourceProp, term, termCls, indexType, termValueProp);
+			}
+			nextValueToBeAdded = !onlyFirst;
 		}
 	}
 	
 	private void addLanguageTermAnnotationFromTerm(OWLClass cls, OWLAnnotationProperty targetProp, 
-			RDFProperty sourceProp, RDFResource termInst, OWLClass termCls, OWLNamedIndividual indexType) {
-		String label = (String) termInst.getPropertyValue(cm.getLabelProperty());
+			RDFProperty sourceProp, RDFResource termInst, OWLClass termCls, OWLNamedIndividual indexType, 
+			RDFProperty termValueProp) {
+		String label = (String) termInst.getPropertyValue(termValueProp);
 		if (label == null || isAppropriateTerm (termInst) != true) {
 			return;
 		}

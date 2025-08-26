@@ -3,6 +3,7 @@ package org.who.owl.export;
 import java.util.Optional;
 
 import org.apache.log4j.Logger;
+import org.semanticweb.owlapi.model.EntityType;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLAnnotation;
 import org.semanticweb.owlapi.model.OWLAnnotationProperty;
@@ -18,6 +19,8 @@ import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.search.Searcher;
 import org.semanticweb.owlapi.util.OWLEntityRemover;
+
+import uk.ac.manchester.cs.owl.owlapi.OWLLiteralImplPlain;
 
 public class ExportPostProcessor {
 	
@@ -45,6 +48,9 @@ public class ExportPostProcessor {
 		
 		log.info("Post-process: Move erroneous classes under Error class");
 		moveErrorClasses();
+		
+		log.info("Post-process: Add Markdown prefixes");
+		addMarkdownPrefixes();
 		
 		//not needed for WHO-FIC
 		//log.info("Post-process: Removing ICD Categories class");
@@ -139,6 +145,41 @@ public class ExportPostProcessor {
 		}
 	}
 
+	
+	public void addMarkdownPrefixes() {
+		targetOnt.classesInSignature().
+			filter(c -> c.isBuiltIn() == false).
+			filter(c -> hasDiagnosticCriteria(c)).
+			forEach(c -> addMarkdownPrefix(c, icdapiModel.getDiagnosticCriteriaProp()));
+	}
+	
+	
+	private void addMarkdownPrefix(OWLClass cls, OWLAnnotationProperty prop) {
+		
+		try {
+			log.info("Adding Markdown prefix for " + cls + " and property " + prop);
+			Searcher.values(Searcher.annotationObjects(targetOnt.annotationAssertionAxioms(cls.getIRI()), prop)).
+					forEach(langTerm -> addMarkdownPrefixToLanguageTerm(langTerm));
+		} catch (Exception e) {
+			log.warn("Error adding the Markdown prefix (!markdown) to the " + prop.getIRI() + " property at class " + cls + ".", e);
+		}
+	}
+
+	
+	private void addMarkdownPrefixToLanguageTerm(OWLAnnotationValue langTerm) {
+		if (langTerm instanceof IRI) {
+			OWLEntity langTermInd = df.getOWLEntity(EntityType.NAMED_INDIVIDUAL, (IRI)langTerm);
+			OWLAnnotationProperty labelProp = icdapiModel.getLabelProp();
+			OWLLiteral label = getAnnotationValue(targetOnt, langTermInd, labelProp);
+			if (label != null && !label.getLiteral().isBlank()) {
+				OWLLiteral newLabel = new OWLLiteralImplPlain("!markdown\n" + label.getLiteral(), label.getLang());
+				log.info("  Old value: " + label.getLiteral() + "\n  New value: " + newLabel);
+				targetOnt.addAxiom(df.getOWLAnnotationAssertionAxiom(labelProp, langTermInd.getIRI(), newLabel));
+				targetOnt.removeAxiom(df.getOWLAnnotationAssertionAxiom(labelProp, langTermInd.getIRI(), label));
+			}
+		}
+	}
+	
 	// ***************** Generic methods *********************** //
 
 
@@ -161,5 +202,9 @@ public class ExportPostProcessor {
 		Optional<OWLAnnotationValue> ann = Searcher
 				.values(Searcher.annotationObjects(ont.annotationAssertionAxioms(cls.getIRI()), prop)).findFirst();
 		return ann.isPresent() ? ann.get().asIRI().get() : null;
+	}
+
+	private boolean hasDiagnosticCriteria(OWLEntity ind) {
+		return getAnnotationInstanceValue(targetOnt, ind, icdapiModel.getDiagnosticCriteriaProp()) != null;
 	}
 }

@@ -57,6 +57,8 @@ public class ICDAPIConstants {
 	
 	public final static String BASE_EXCLUSION_PROP = TARGET_ONT_NS + "baseExclusion";
 	
+	public final static String DIAGNOSTIC_CRITERIA_PROP = TARGET_ONT_NS + "diagnosticCriteria";
+	
 	public final static String ICF_REFERENCE_PROP = TARGET_ONT_NS + "icfReference";
 	public final static String RELATED_IMPAIRMENT_PROP = TARGET_ONT_NS + "relatedImpairment";
 	
