@@ -117,8 +117,8 @@ public class LinearziationExporter {
 		}
 
 		exportBooleanLinProp(linSpec, cm.getIsIncludedInLinearizationProperty(), "isIncludedInLinearization", false, linMap);
-		exportBooleanLinProp(linSpec, cm.getIsGroupingProperty(), "isGrouping", true, linMap);
-		exportBooleanLinProp(linSpec, cm.getIsAuxiliaryAxisChildProperty(), "isAuxiliaryAxisChild", true, linMap);
+		exportBooleanLinProp(linSpec, cm.getIsGroupingProperty(), "isGrouping", false, linMap);
+		exportBooleanLinProp(linSpec, cm.getIsAuxiliaryAxisChildProperty(), "isAuxiliaryAxisChild", false, linMap);
 
 		return linMap;
 	}
