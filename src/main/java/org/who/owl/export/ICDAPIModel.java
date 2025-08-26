@@ -33,7 +33,7 @@ public class ICDAPIModel {
 	private OWLAnnotationProperty inclusionProp;
 	private OWLAnnotationProperty browserUrlProp;
 	private OWLAnnotationProperty foundRefProp;
-	private OWLAnnotationProperty isObsoleteProp;
+//	private OWLAnnotationProperty isObsoleteProp;
 	
 	private OWLAnnotationProperty icd10codeProp;
 	private OWLAnnotationProperty baseIndexProp;
@@ -84,7 +84,7 @@ public class ICDAPIModel {
 		noteProp = getAnnotationProperty(ICDAPIConstants.NOTE);
 		codingHintProp = getAnnotationProperty(ICDAPIConstants.CODING_HINT);
 		
-		isObsoleteProp = getAnnotationProperty(ICDAPIConstants.IS_OBSOLETE);
+//		isObsoleteProp = getAnnotationProperty(ICDAPIConstants.IS_OBSOLETE);
 		icd10codeProp = getAnnotationProperty(ICDAPIConstants.ICD10CODE);
 		
 		termCls = getCls(ICDAPIConstants.TERM_CLS);
@@ -171,9 +171,9 @@ public class ICDAPIModel {
 		return foundRefProp;
 	}
 	
-	public OWLAnnotationProperty getIsObsoleteProp() {
-		return isObsoleteProp;
-	}
+//	public OWLAnnotationProperty getIsObsoleteProp() {
+//		return isObsoleteProp;
+//	}
 	
 	public OWLAnnotationProperty getICD10CodeProp() {
 		return icd10codeProp;

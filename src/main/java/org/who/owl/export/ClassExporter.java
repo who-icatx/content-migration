@@ -201,7 +201,7 @@ public class ClassExporter {
 		Object isObsoleteObj = sourceCls.getPropertyValue(isObsoleteProp);
 		if (isObsoleteObj != null && isObsoleteObj instanceof Boolean) {
 			boolean isObsolete = (Boolean) isObsoleteObj;
-			addBooleanAnnotation(cls, icdapiModel.getIsObsoleteProp(), isObsolete);
+//			addBooleanAnnotation(cls, icdapiModel.getIsObsoleteProp(), isObsolete);
 			if (isObsolete == true) {
 				deprecateCls(cls);
 			}
