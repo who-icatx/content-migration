@@ -17,6 +17,7 @@ import org.semanticweb.owlapi.model.OWLLiteral;
 import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
+import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
 import org.semanticweb.owlapi.search.Searcher;
 import org.semanticweb.owlapi.util.OWLEntityRemover;
 
@@ -51,6 +52,9 @@ public class ExportPostProcessor {
 		
 		log.info("Post-process: Add Markdown prefixes");
 		addMarkdownPrefixes();
+		
+		log.info("Post-process: Remove redundant class expression superclasses (e.g. those from equivalent classes)");
+		removeRedundantClassExpressionSuperclasses();
 		
 		//not needed for WHO-FIC
 		//log.info("Post-process: Removing ICD Categories class");
@@ -180,6 +184,38 @@ public class ExportPostProcessor {
 		}
 	}
 	
+	
+	public void removeRedundantClassExpressionSuperclasses() {
+		targetOnt.classesInSignature().
+			filter(c -> c.isBuiltIn() == false).
+			filter(c -> hasClassExpressionSuperclass(c)).
+			forEach(c -> removeRedundantClassExpressionSuperclasses(c));
+	}
+	
+	
+	private void removeRedundantClassExpressionSuperclasses(OWLClass cls) {
+		targetOnt.subClassAxiomsForSubClass(cls).
+			filter(c -> isSuperclassAClassExpression(c)).
+			forEach(subclassOfAxiom -> removeRedundantClassExpressionSuperclass(subclassOfAxiom));
+	}
+	
+	private void removeRedundantClassExpressionSuperclass(OWLSubClassOfAxiom subClassOfAxiom) {
+		OWLClassExpression cls = subClassOfAxiom.getSubClass();
+		OWLClassExpression clsExprSuperclass = subClassOfAxiom.getSuperClass();
+		try {
+			if (targetOnt.equivalentClassesAxioms((OWLClass) cls).anyMatch(eqivClassAx -> eqivClassAx.equals(df.getOWLEquivalentClassesAxiom(cls, clsExprSuperclass))) ) {
+//				log.info("Removing subclassOf axiom for equivalent class: " + subClassOfAxiom);
+				targetOnt.remove(subClassOfAxiom);
+			}
+			else {
+				log.info("SubclassOf axiom of a class expression was not removed: " + subClassOfAxiom);
+			}
+		} catch (Exception e) {
+			log.warn("Error at removing superclass " + clsExprSuperclass + " of class " + cls, e);
+		}
+	}
+
+	
 	// ***************** Generic methods *********************** //
 
 
@@ -204,7 +240,17 @@ public class ExportPostProcessor {
 		return ann.isPresent() ? ann.get().asIRI().get() : null;
 	}
 
+	
 	private boolean hasDiagnosticCriteria(OWLEntity ind) {
 		return getAnnotationInstanceValue(targetOnt, ind, icdapiModel.getDiagnosticCriteriaProp()) != null;
+	}
+
+	
+	private boolean hasClassExpressionSuperclass(OWLClass cls) {
+		return targetOnt.subClassAxiomsForSubClass(cls).anyMatch(c -> isSuperclassAClassExpression(c));
+	}
+	
+	private boolean isSuperclassAClassExpression(OWLSubClassOfAxiom subCLassOfAxiom) {
+		return subCLassOfAxiom.getSuperClass().isAnonymousExpression();
 	}
 }
